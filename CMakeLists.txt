@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_executable(mcut
-	src/main.cpp
+	src/main1.cpp
 
 	src/image3b.cpp
 	src/image3b.h
