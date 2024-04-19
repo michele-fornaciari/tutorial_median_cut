@@ -11,16 +11,20 @@ uint8_t to_uint8(uint32_t v)
     return static_cast<uint8_t>(std::clamp(v, 0U, 255U));
 };
 
-static std::vector<Pixel> get_palette_fake(const Image3b& src, size_t N)
+static palette_t get_palette_fake(const Image3b& src, size_t N)
 {
     // Generate N random pixels
-    std::vector<Pixel> palette;
+    palette_t palette;
     return palette;
 }
 
 static Pixel get_palette_color(const palette_t& palette, const Pixel& p)
 {
-    // Get the nearest palette pixel value
+    // Get the palette color for current pixel
+
+    // 1. Compute the distance between current pixel and the whole palette
+    // 2. Select the lowest distance palette color
+
     return p;
 }
 
@@ -29,8 +33,8 @@ static Image3b apply_palette(const Image3b& src, const palette_t& palette)
     // For each pixel, get the corresponding palette color
     Image3b dst(src.width(), src.height());
 
-    // 1. For each pixel
-    // 2. Assign palette color
+    // 1. For each pixel on src image
+    // 2. Assign palette color to dst image: call 'get_palette_color'
 
     return dst;
 }
@@ -40,7 +44,7 @@ static Image3b apply_palette(const Image3b& src, const palette_t& palette)
 static Image3b median_cut(const Image3b& src, size_t N)
 {
     // 1. Get palette with N colors
-    const std::vector<Pixel> palette = get_palette_fake(src, N);
+    const palette_t palette = get_palette_fake(src, N);
 
     // 2. Apply palette to input image
     const Image3b dst = apply_palette(src, palette);
@@ -51,7 +55,7 @@ int main(int argc, char** argv)
 {
     // Hard coded input data
     const std::string filepath = "C:/projects/corso_mdp/_dvc_code/tutorial_median_cut/data/parrot_01.jpg";
-    const int N = 10;
+    const size_t N = 10;
 
     std::cout << "image: " << filepath << std::endl;
     std::cout << "N: " << N << std::endl;

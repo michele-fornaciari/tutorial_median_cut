@@ -11,12 +11,12 @@ uint8_t to_uint8(uint32_t v)
     return static_cast<uint8_t>(std::clamp(v, 0U, 255U));
 };
 
-static std::vector<Pixel> get_palette_fake(const Image3b& src, size_t N)
+static palette_t get_palette_fake(const Image3b& src, size_t N)
 {
     // Generate N random pixels
     std::srand(std::time(NULL));
 
-    std::vector<Pixel> palette(N);
+    palette_t palette(N);
     for (auto& p : palette)
     {
         p[Channel::RED] = rand() % 255;
@@ -28,8 +28,10 @@ static std::vector<Pixel> get_palette_fake(const Image3b& src, size_t N)
 
 static Pixel get_palette_color(const palette_t& palette, const Pixel& p)
 {
-    // Get the nearest palette pixel value
-    auto it = std::min_element(palette.begin(), palette.end(), [p](const Pixel& lhs, const Pixel& rhs) {
+    // Get the palette color for current pixel
+    auto it = std::min_element(palette.begin(), palette.end(), [p](const Pixel& lhs, const Pixel& rhs) 
+    {
+        // Compare according to distance with current pixel
         return Pixel::distance2(p, lhs) < Pixel::distance2(p, rhs);
     });
     return *it;
@@ -60,7 +62,7 @@ static Image3b apply_palette(const Image3b& src, const palette_t& palette)
 static Image3b median_cut(const Image3b& src, size_t N)
 {
     // 1. Get palette with N colors
-    const std::vector<Pixel> palette = get_palette_fake(src, N);
+    const palette_t palette = get_palette_fake(src, N);
 
     // 2. Apply palette to input image
     const Image3b dst = apply_palette(src, palette);
@@ -71,7 +73,7 @@ int main(int argc, char** argv)
 {
     // Hard coded input data
     const std::string filepath = "C:/projects/corso_mdp/_dvc_code/tutorial_median_cut/data/parrot_01.jpg";
-    const int N = 10;
+    const size_t N = 10;
 
     std::cout << "image: " << filepath << std::endl;
     std::cout << "N: " << N << std::endl;

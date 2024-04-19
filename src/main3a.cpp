@@ -29,6 +29,10 @@ struct Box
     // Split pixels according to median value on the selected channel
     std::tuple<Box, Box> split_on_median()
     {
+        //------
+        // TODO
+        //------
+
         // 1. Find median position
         // 2. Get left portion
         Box left({});
@@ -41,6 +45,10 @@ struct Box
     // Get the mean pixel value
     Pixel mean_pixel() const
     {
+        //------
+        // TODO
+        //------
+
         // Compute the mean value for all pixels
         const uint8_t r = to_uint8(0);
         const uint8_t g = to_uint8(0);
@@ -56,6 +64,10 @@ private:
     // Get the channel with the highest range, and the range value
     static RangeInfo get_range_info(const std::vector<Pixel>& pixels)
     {
+        //------
+        // TODO
+        //------
+
         // 1. Get min and max values for each channel
         // 2. Compute the range for each channel
         // 2.1 Get the largest range value
@@ -71,6 +83,9 @@ private:
 
 static std::vector<Box> split_space_in_boxes(const Image3b& src, size_t N)
 {
+    //------
+    // TODO
+    //------
     
     // 1. Init box with all pixels
     std::vector<Box> boxes = { Box(src.pixels()) };
@@ -90,7 +105,7 @@ static std::vector<Box> split_space_in_boxes(const Image3b& src, size_t N)
 
 
 
-static std::vector<Pixel> get_palette(const Image3b& src, size_t N)
+static palette_t get_palette(const Image3b& src, size_t N)
 {
     palette_t palette;
 
@@ -107,26 +122,9 @@ static std::vector<Pixel> get_palette(const Image3b& src, size_t N)
     return palette;
 }
 
-static std::vector<Pixel> get_palette_fake(const Image3b& src, size_t N)
-{
-    // Generate N random pixels
-    std::srand(std::time(NULL));
-
-    std::vector<Pixel> palette(N);
-    for (auto& p : palette)
-    {
-        p[Channel::RED] = rand() % 255;
-        p[Channel::GREEN] = rand() % 255;
-        p[Channel::BLUE] = rand() % 255;
-    }
-    return palette;
-}
-
-
-
 static Pixel get_palette_color(const palette_t& palette, const Pixel& p)
 {
-    // Get the nearest palette pixel value
+    // Get the palette color for current pixel
     auto it = std::min_element(palette.begin(), palette.end(), [p](const Pixel& lhs, const Pixel& rhs) {
         return Pixel::distance2(p, lhs) < Pixel::distance2(p, rhs);
     });
@@ -158,7 +156,7 @@ static Image3b apply_palette(const Image3b& src, const palette_t& palette)
 static Image3b median_cut(const Image3b& src, size_t N)
 {
     // 1. Get palette with N colors
-    const std::vector<Pixel> palette = get_palette_fake(src, N);
+    const palette_t palette = get_palette(src, N);
 
     // 2. Apply palette to input image
     const Image3b dst = apply_palette(src, palette);
@@ -169,7 +167,7 @@ int main(int argc, char** argv)
 {
     // Hard coded input data
     const std::string filepath = "C:/projects/corso_mdp/_dvc_code/tutorial_median_cut/data/parrot_01.jpg";
-    const int N = 10;
+    const size_t N = 10;
 
     std::cout << "image: " << filepath << std::endl;
     std::cout << "N: " << N << std::endl;
