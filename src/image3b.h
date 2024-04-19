@@ -9,24 +9,24 @@ class Image3b {
 	std::vector<Pixel> m_data;
 
 public:
-	Image3b() : m_w(0), m_h(0) {}
-	Image3b(uint32_t w, uint32_t h) : m_w(w), m_h(h), m_data(w*h) {}
-	Image3b(uint32_t w, uint32_t h, const uint8_t* arr) : m_w(w), m_h(h), m_data(((Pixel*)arr), ((Pixel*)arr) + (w*h)) {};
+	Image3b();
+	Image3b(uint32_t w, uint32_t h);
+	Image3b(uint32_t w, uint32_t h, const uint8_t* arr);
 	
-	uint32_t width() const { return m_w; }
-	uint32_t height() const { return m_h; }
-	uint32_t channels() const { return 3; }
-	uint32_t size() const { return m_w * m_h; }
-	bool empty() const { return m_data.empty(); }
+	uint32_t width() const;
+	uint32_t height() const;
+	uint32_t channels() const;
+	uint32_t size() const;
+	bool empty() const;
 
-	std::vector<Pixel>& pixels() { return m_data; }
-	const std::vector<Pixel>& pixels() const { return m_data; }
+	std::vector<Pixel>& pixels();
+	const std::vector<Pixel>& pixels() const;
 
-	Pixel& operator() (uint32_t r, uint32_t c) { return m_data[r*m_w + c]; }
-	const Pixel& operator() (uint32_t r, uint32_t c) const { return m_data[r*m_w + c]; }
+	Pixel& operator() (uint32_t r, uint32_t c);
+	const Pixel& operator() (uint32_t r, uint32_t c) const;
 
-	uint8_t* data() { return reinterpret_cast<uint8_t*>(m_data.data()); }
-	const uint8_t* data() const { return reinterpret_cast<const uint8_t*>(m_data.data()); }
+	uint8_t* data();
+	const uint8_t* data() const;
 };
 
 #endif // MDP_IMAGE3B_H

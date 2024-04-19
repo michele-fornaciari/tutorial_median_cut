@@ -157,7 +157,10 @@ static Image3b apply_palette(const Image3b& src, const palette_t& palette)
 // https://indiegamedev.net/2020/01/17/median-cut-with-floyd-steinberg-dithering-in-c/
 static Image3b median_cut(const Image3b& src, size_t N)
 {
-    const std::vector<Pixel> palette = get_palette(src, N);
+    // 1. Get palette with N colors
+    const std::vector<Pixel> palette = get_palette_fake(src, N);
+
+    // 2. Apply palette to input image
     const Image3b dst = apply_palette(src, palette);
     return dst;
 }
