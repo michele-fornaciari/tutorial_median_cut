@@ -7,7 +7,7 @@
 int main(int argc, char** argv) 
 {
     // Hard coded input data
-    const std::string filepath = "C:/projects/corso_mdp/_dvc_code/tutorial_median_cut/data/parrot_01.jpg";
+    const std::string filepath = "../data/parrot_01.jpg";
     std::cout << "image: " << filepath << std::endl;
 
     // Load image

@@ -211,7 +211,7 @@ static Image3b median_cut(const Image3b& src, size_t N)
 int main(int argc, char** argv) 
 {
     // Hard coded input data
-    const std::string default_filepath = "C:/projects/corso_mdp/_dvc_code/tutorial_median_cut/data/parrot_01.jpg";
+    const std::string default_filepath = "../data/parrot_01.jpg";
     const size_t default_N = 10;
 
     std::string filepath = default_filepath;
