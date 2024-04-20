@@ -13,6 +13,11 @@ uint8_t to_uint8(uint32_t v)
 
 static palette_t get_palette_fake(const Image3b& src, size_t N)
 {
+    /////////
+    // TODO
+    /////////
+
+
     // Generate N random pixels
     palette_t palette;
     return palette;
@@ -20,6 +25,10 @@ static palette_t get_palette_fake(const Image3b& src, size_t N)
 
 static Pixel get_palette_color(const palette_t& palette, const Pixel& p)
 {
+    /////////
+    // TODO
+    /////////
+
     // Get the palette color for current pixel
 
     // 1. Compute the distance between current pixel and the whole palette
@@ -30,6 +39,10 @@ static Pixel get_palette_color(const palette_t& palette, const Pixel& p)
 
 static Image3b apply_palette(const Image3b& src, const palette_t& palette)
 {
+    /////////
+    // TODO
+    /////////
+
     // For each pixel, get the corresponding palette color
     Image3b dst(src.width(), src.height());
 

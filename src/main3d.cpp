@@ -1,9 +1,13 @@
 #include <string>
 #include <iostream>
+#include <cassert>
 #include "image3b.h"
 #include "utils.h"
 
+#include "cli11/CLI11.hpp"
+
 using palette_t = std::vector<Pixel>;
+
 
 uint8_t to_uint8(uint32_t v) 
 {
@@ -17,7 +21,7 @@ struct RangeInfo
 };
 
 struct Box
-{    
+{
     Box(const std::vector<Pixel>& pixels) : m_pixels(pixels) 
     {
         m_info = get_range_info(m_pixels);
@@ -28,15 +32,21 @@ struct Box
     // Split pixels according to median value on the selected channel
     std::tuple<Box, Box> split_on_median()
     {
-        //------
-        // TODO
-        //------
+        assert(!m_pixels.empty());
+        assert(m_info.max_range > 1);
 
         // 1. Find median value on max range channel
+        const size_t half_pos = m_pixels.size() / 2;
+        std::nth_element(m_pixels.begin(), std::next(m_pixels.begin(), half_pos), m_pixels.end(), [ch = m_info.max_channel](const Pixel& lhs, const Pixel& rhs) {
+            return lhs[ch] < rhs[ch];
+        });
+        auto half_it = std::next(m_pixels.begin(), half_pos);
+         
         // 2. Get left portion
-        Box left({});
+        Box left(std::vector<Pixel>(m_pixels.begin(), half_it));
+
         // 3. Get right portion
-        Box right({});
+        Box right(std::vector<Pixel>(half_it, m_pixels.end()));
 
         return { left, right };
     }
@@ -44,59 +54,109 @@ struct Box
     // Get the mean pixel value
     Pixel mean_pixel() const
     {
-        //------
-        // TODO
-        //------
+        uint32_t R = 0;
+        uint32_t G = 0;
+        uint32_t B = 0;
 
-        // Compute the mean value for all pixels
-        const uint8_t r = to_uint8(0);
-        const uint8_t g = to_uint8(0);
-        const uint8_t b = to_uint8(0);
+        for (const auto& p : m_pixels)
+        {
+            R += p.r();
+            G += p.g();
+            B += p.b();
+        }
+
+        const size_t N_PIXELS = m_pixels.size();
+        R = R / N_PIXELS;
+        G = G / N_PIXELS;
+        B = B / N_PIXELS;
+
+        const uint8_t r = to_uint8(R);
+        const uint8_t g = to_uint8(G);
+        const uint8_t b = to_uint8(B);
+
         return Pixel(r, g, b);
     }
 
 
 private:
+    
     std::vector<Pixel> m_pixels;
     RangeInfo m_info;
 
     // Get the channel with the highest range, and the range value
     static RangeInfo get_range_info(const std::vector<Pixel>& pixels)
     {
-        //------
-        // TODO
-        //------
-
         // 1. Get min and max values for each channel
-        // 2. Compute the range for each channel
-        // 2.1 Get the largest range value
-        // 2.2 Get the largest range channel
+        uint8_t min_r = 255;
+        uint8_t max_r = 0;
+
+        uint8_t min_g = 255;
+        uint8_t max_g = 0;
+
+        uint8_t min_b = 255;
+        uint8_t max_b = 0;
+
+        for (const auto& p : pixels)
+        {
+            min_r = std::min(min_r, p.r());
+            max_r = std::max(max_r, p.r());
+
+            min_g = std::min(min_g, p.g());
+            max_g = std::max(max_g, p.g());
+
+            min_b = std::min(min_b, p.b());
+            max_b = std::max(max_b, p.b());
+        }
+
+        // 2. Compute the range for each channel        
+        const std::array<int, 3> ranges =
+        {
+            (max_r - min_r),
+            (max_g - min_g),
+            (max_b - min_b),
+        };
+
+        const auto it = std::max_element(ranges.begin(), ranges.end());
 
         RangeInfo info;
-        info.max_range = 0;
-        info.max_channel = Channel::RED;
+        
+        // 2.1 Get the largest range value
+        info.max_range = to_uint8(*it);
+        
+        // 2.2 Get the largest range channel
+        info.max_channel = Channel(std::distance(ranges.begin(), it));
 
         return info;
     }
 };
 
 static std::vector<Box> split_space_in_boxes(const Image3b& src, size_t N)
-{
-    //------
-    // TODO
-    //------
-    
+{    
     // 1. Init box with all pixels
     std::vector<Box> boxes = { Box(src.pixels()) };
     
     // 2. Loop until you find N boxes
     while (boxes.size() < N)
     {
-        break; // remove me
         // 2.1 Find the box with the largest color range
+        auto largest_it = std::max_element(boxes.begin(), boxes.end(), [](const Box& lhs, const Box& rhs) {
+            return lhs.max_range() < rhs.max_range();
+        });
+
+        const bool not_splittable = largest_it->max_range() < 2;
+        if (not_splittable) {
+            break;
+        }
+
         // 2.2 Split the range at median value        
+        auto [left, right] = largest_it->split_on_median();
+
         // 2.3 Remove this box from 'boxes'
+        boxes.erase(largest_it);
+
         // 2.4 Add the two splitted boxes to 'boxes'
+        boxes.push_back(left);
+        boxes.push_back(right);
     }
 
     return boxes;
@@ -137,6 +197,7 @@ static Image3b apply_palette(const Image3b& src, const palette_t& palette)
 
     if (!palette.empty())
     {
+//#pragma omp parallel for 
         // 1. For each pixel
         for (int r = 0; r < src.height(); ++r)
         {
@@ -155,18 +216,30 @@ static Image3b apply_palette(const Image3b& src, const palette_t& palette)
 static Image3b median_cut(const Image3b& src, size_t N)
 {
     // 1. Get palette with N colors
+    auto t0 = tic();
     const palette_t palette = get_palette(src, N);
+    toc(t0, "get palette");
 
     // 2. Apply palette to input image
+    auto t1 = tic();
     const Image3b dst = apply_palette(src, palette);
+    toc(t1, "apply palette");
     return dst;
 }
 
 int main(int argc, char** argv) 
 {
     // Hard coded input data
-    const std::string filepath = "../data/parrot_01.jpg";
-    const size_t N = 10;
+    const std::string default_filepath = "../data/parrot_01.jpg";
+    const size_t default_N = 10;
+
+    std::string filepath = default_filepath;
+    int N = default_N;
+
+    CLI::App app("Median Cut");
+    app.add_option("file, -f, --file", filepath, "filepath to image");
+    app.add_option("n, -n", N, "median cut N");
+    CLI11_PARSE(app, argc, argv);
 
     std::cout << "image: " << filepath << std::endl;
     std::cout << "N: " << N << std::endl;

@@ -1,5 +1,6 @@
 #include <string>
 #include <iostream>
+#include <cassert>
 #include "image3b.h"
 #include "utils.h"
 
@@ -21,7 +22,6 @@ struct RangeInfo
 
 struct Box
 {
-    std::vector<Pixel> m_pixels;
     Box(const std::vector<Pixel>& pixels) : m_pixels(pixels) 
     {
         m_info = get_range_info(m_pixels);
@@ -32,7 +32,10 @@ struct Box
     // Split pixels according to median value on the selected channel
     std::tuple<Box, Box> split_on_median()
     {
-        // 1. Find median position
+        assert(!m_pixels.empty());
+        assert(m_info.max_range > 1);
+
+        // 1. Find median value on max range channel
         const size_t half_pos = m_pixels.size() / 2;
         std::nth_element(m_pixels.begin(), std::next(m_pixels.begin(), half_pos), m_pixels.end(), [ch = m_info.max_channel](const Pixel& lhs, const Pixel& rhs) {
             return lhs[ch] < rhs[ch];
@@ -77,11 +80,13 @@ struct Box
 
 private:
     
+    std::vector<Pixel> m_pixels;
     RangeInfo m_info;
 
     // Get the channel with the highest range, and the range value
     static RangeInfo get_range_info(const std::vector<Pixel>& pixels)
     {
+        // 1. Get min and max values for each channel
         uint8_t min_r = 255;
         uint8_t max_r = 0;
 
@@ -103,7 +108,8 @@ private:
             max_b = std::max(max_b, p.b());
         }
 
-        std::array<int, 3> ranges =
+        // 2. Compute the range for each channel        
+        const std::array<int, 3> ranges =
         {
             (max_r - min_r),
             (max_g - min_g),
@@ -113,7 +119,11 @@ private:
         const auto it = std::max_element(ranges.begin(), ranges.end());
 
         RangeInfo info;
+        
+        // 2.1 Get the largest range value
         info.max_range = to_uint8(*it);
+        
+        // 2.2 Get the largest range channel
         info.max_channel = Channel(std::distance(ranges.begin(), it));
 
         return info;
@@ -121,8 +131,7 @@ private:
 };
 
 static std::vector<Box> split_space_in_boxes(const Image3b& src, size_t N)
-{
-    
+{    
     // 1. Init box with all pixels
     std::vector<Box> boxes = { Box(src.pixels()) };
     
@@ -133,6 +142,11 @@ static std::vector<Box> split_space_in_boxes(const Image3b& src, size_t N)
         auto largest_it = std::max_element(boxes.begin(), boxes.end(), [](const Box& lhs, const Box& rhs) {
             return lhs.max_range() < rhs.max_range();
         });
+
+        const bool not_splittable = largest_it->max_range() < 2;
+        if (not_splittable) {
+            break;
+        }
 
         // 2.2 Split the range at median value        
         auto [left, right] = largest_it->split_on_median();
